@@ -46,6 +46,8 @@ def outstanding_2_significance(data: Series) -> float:
 
     # print("p_value: ", p_value)
 
+    oustanding_2_plot(Y, a=model.coef_[0], b = -0.7)
+
     return p_value
 
 def outstanding_2_check(data: Series, threshold:float=0.3) -> bool:
@@ -68,13 +70,52 @@ def outstanding_2_check(data: Series, threshold:float=0.3) -> bool:
     else:
         return False
 
+def oustanding_2_plot(values: list, a: float, b: float) -> None:
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # 示例数据
+    # sorted_x_ray = np.arange(1, len(values)+1)
+
+    start_value = 1
+    end_value = len(values)+0.5
+    step_size = 0.01
+
+    x = np.arange(start_value, end_value, step_size)
+
+    # 计算Y轴数据，即幂律函数的值
+    y = a * x**b
+
+    # 创建一个新的图表
+    plt.figure()
+
+    # 绘制条形图
+    plt.bar(np.arange(1, len(values)+1), values, color='skyblue')
+
+    # 绘制幂律函数的曲线
+    # plt.plot(x, y, 'blue', linewidth=1)
+    plt.plot(x, y, "blue", linewidth=1, label=f"y = {a:.2f} * x^({b:.2f})")
+    plt.legend()
+
+    # 添加标题和标签
+    plt.title('Bar Chart with Power Law Curve')
+    plt.xlabel('Sorted Values')
+    plt.ylabel('Values')
+
+    # 可以添加网格线以便更好地观察曲线与条形的关系
+    plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+    plt.savefig("outstanding_2_plot.png",    dpi=800,    bbox_inches='tight')
+    # 显示图表
+    plt.show()
+    
+
 if __name__ == '__main__':
 
-    print(outstanding_2_check(Series([1, 2, 3, 4, 5, 6]), threshold=2/6))
+    # print(outstanding_2_check(Series([1, 2, 3, 4, 5, 6]), threshold=2/6))
     # p_value:  0.43866320484826793   False
-    print(outstanding_2_check(Series([1, 2, 3, 4, 10, 20]), threshold=2/6))
-    # p_value:  0.32057748133343134   True
+    # print(outstanding_2_check(Series([1, 2, 3, 4, 10, 20]), threshold=2/6))
+    # # p_value:  0.32057748133343134   True
     print(outstanding_2_check(Series([1, 2, 3, 4, 15, 20]), threshold=2/6))
     # p_value:  0.23752084891573466   True
-    print(outstanding_2_check(Series([1, 2, 3, 4, 5, 20]), threshold=2/6))
-    # p_value:  0.7067535526959948    False
+    # print(outstanding_2_check(Series([1, 2, 3, 4, 5, 20]), threshold=2/6))
+    # # p_value:  0.7067535526959948    False

@@ -66,7 +66,7 @@ def change_point_detection_2(data: DataFrame, method: str = 'rbf', jump: int = 1
     # print(result)
 
     # change point detection
-    model = "l2"  # "l2", "rbf"
+    model = "l2"  # "l1", "l2", "rbf"
     algo = rpt.Pelt(model=model, min_size=3, jump=7).fit(values)
     my_bkps = algo.predict(pen=3)
     # show results
@@ -77,33 +77,8 @@ def change_point_detection_2(data: DataFrame, method: str = 'rbf', jump: int = 1
     for bkp in result:
         plt.axvline(x=bkp, color='r', linestyle='--')
     plt.show()
-    # algo_2 = rpt.Dynp(model="l2", min_size=3, jump=3).fit(values)
-    # partition = algo_2.seg(0, len(values),n_bkps=4)
-    # print(partition)
-    # result = result[:-1]
-    # # 显示结果
-    # plt.plot(values)
-    # for bkp in result:
-    #     plt.axvline(x=bkp, color='r', linestyle='--')
-    # plt.show()
 
-    mean = 0
-    std_dev = 1
-    length_of_series = 100
-    values = np.random.normal(mean, std_dev, length_of_series)
 
-    values[-35:] = values[-35:] + 10
-    model = "l2"  # "l2", "rbf"
-    algo = rpt.Pelt(model=model, min_size=3, jump=7).fit(values)
-    my_bkps = algo.predict(pen=3)
-    # show results
-    print(my_bkps)
-    result = my_bkps[:-1]
-    # 显示结果
-    plt.plot(values)
-    for bkp in result:
-        plt.axvline(x=bkp, color='r', linestyle='--')
-    plt.show()
 
 def change_point_detection_test(data: DataFrame, detection_window_length: int = 3, threshold: float = 0.05) -> List:
 
