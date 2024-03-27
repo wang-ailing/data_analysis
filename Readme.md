@@ -6,7 +6,7 @@
 ### 1.3 Outstanding_2 Detection
 **Outstanding_2 Data**
 ![Outstanding_2 Detection](./outstanding_2_plot.png)
-
+![Outstanding_2 Gaussian](./outstanding_2_Gaussian_plot.png)
 
 **Not Outstanding_2 Data**
 ![Not Outstanding_2 Detection](./not_outstanding_2_plot.png)

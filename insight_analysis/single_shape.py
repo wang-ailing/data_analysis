@@ -57,7 +57,7 @@ def change_point_detection_rbf(data: DataFrame, method: str = 'rbf', jump: int =
     plt.plot(values)
     for bkp in result:
         plt.axvline(x=bkp, color='r', linestyle='--')
-    plt.savefig('change_point_detection_model_rbf_1.png', dpi=800)
+    plt.savefig('change_point_detection_model_rbf_1.png', dpi=800, bbox_inches='tight')
     plt.show()
 
 def change_point_detection_test(data: DataFrame, detection_window_length: int = 3, threshold: float = 0.05) -> List:

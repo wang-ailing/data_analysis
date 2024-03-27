@@ -47,6 +47,10 @@ def outstanding_2_significance(data: Series) -> float:
     # print("p_value: ", p_value)
 
     # oustanding_2_plot(Y, a=model.coef_[0], b = -0.7)
+    # R_MAX = ( Y[0] - Y_pred[0] ) 
+    # R_MIN = ( Y[1] - Y_pred[1] ) 
+    # print("R_MAX: ", R_MAX, "R_MIN: ", R_MIN)
+    # outstanding_2_Gaussian_plot(mu, sigma, (Y[0]-Y_pred[0]), (Y[1]-Y_pred[1]), R)
 
     return p_value
 
@@ -69,6 +73,68 @@ def outstanding_2_check(data: Series, threshold:float=0.3) -> bool:
         return True
     else:
         return False
+
+def outstanding_2_Gaussian_plot(mu, sigma, r1, r2, R) -> None:
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # 生成一系列的x值
+    x = np.linspace(mu-3*sigma, mu+3*sigma, 1000)
+
+    # 计算对应的高斯函数值
+    y = (1/(sigma*np.sqrt(2*np.pi))) * np.exp(-((x-mu)**2)/(2*sigma**2))
+
+        # 选择一个特定的x值
+    x_points = [r1, r2]  # 例如，我们选择x = 1.5
+
+    plt.plot(x, y)
+    plt.title('Gaussian Function')
+    plt.xlabel('x')
+    plt.ylabel('f(x)')
+    plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+
+    # y_point = (1/(sigma*np.sqrt(2*np.pi))) * np.exp(-((x_points[0]-mu)**2)/(2*sigma**2))
+    # plt.plot(x_points[0], y_point, 'ro', )  # 'ro'表示红色圆点
+    # plt.annotate('$r1 = {:.2f}$'.format(x_points[0]),
+    #             (x_points[0], y_point),  # 标签的位置
+    #             textcoords="offset points",  # 相对位置
+    #             xytext=(0,10),  # 文本标签的偏移量
+    #             ha='center')  # 水平居中对齐
+    # y_point = (1/(sigma*np.sqrt(2*np.pi))) * np.exp(-((x_points[1]-mu)**2)/(2*sigma**2))
+    # plt.plot(x_points[1], y_point, 'ro', )  # 'ro'表示红色圆点
+    # plt.annotate('$r2 = {:.2f}$'.format(x_points[1]),
+    #             (x_points[1], y_point),  # 标签的位置
+    #             textcoords="offset points",  # 相对位置
+    #             xytext=(0,10),  # 文本标签的偏移量
+    #             ha='center')  # 水平居中对齐
+
+    y_point = (1/(sigma*np.sqrt(2*np.pi))) * np.exp(-((R-mu)**2)/(2*sigma**2))
+    plt.plot(R, y_point, 'ro', )  # 'ro'表示红色圆点
+    plt.annotate('$r1 = {:.2f}$'.format(R),
+                (R, y_point),  # 标签的位置
+                textcoords="offset points",  # 相对位置
+                xytext=(0,10),  # 文本标签的偏移量
+                ha='center')  # 水平居中对齐
+    # 绘制高斯函数图像
+
+    # plt.axhline(0, color='black',linewidth=0.5)
+    # plt.axvline(0, color='black',linewidth=0.5)
+    x_point = R
+    x_values = x
+    y_values = y
+    y_values_after = np.where(x_values > x_point, y_values, np.zeros_like(x_values))
+    y_values_zero = np.zeros_like(x_values)
+
+    # 使用fill_between函数填充阴影
+    plt.fill_between(x_values, y_values_zero, y_values_after, where=(x_values > x_point), color='red', alpha=0.7, label='p_value < 0.1')
+    plt.ylim(ymin=0)
+
+    # 添加图例
+    plt.legend()
+
+    plt.axvline(x=mu, color='r', linestyle='--')
+    plt.show()
+    plt.savefig("outstanding_2_Gaussian_plot.png",    dpi=800,    bbox_inches='tight')
 
 def oustanding_2_plot(values: list, a: float, b: float) -> None:
     import matplotlib.pyplot as plt
