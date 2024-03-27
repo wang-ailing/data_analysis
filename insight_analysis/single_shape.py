@@ -103,7 +103,7 @@ if __name__ == '__main__':
     data = DataFrame({'date': api_return['content']['xvalues'], 'value': api_return['content']['yvalues'][0]})
     print(data)
 
-    print(change_point_detection_2(data))
+    # print(change_point_detection_2(data))
 
 
 

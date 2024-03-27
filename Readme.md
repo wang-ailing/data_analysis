@@ -12,6 +12,14 @@
 ![Not Outstanding_2 Detection](./not_outstanding_2_plot.png)
 
 ## 2. Single Shape Detection
-### 2.1 change_point_detection
+### 2.1 change_point_detection [**ruptures**](https://centre-borelli.github.io/ruptures-docs/)
 ![Change Point Detection](./change_point_detection.png)
 
+### 2.2 outlier_detection
+
+
+### 2.3 seasonality_detection
+
+### 2.4 trend_detection
+
+## 3. Compound Detection
