@@ -20,7 +20,7 @@ def outstanding_1_significance(data: Series, beita=0.7) -> float:
     i = np.arange(1, len(Y) + 1)
     X = i ** (-beita)
 
-    model = LinearRegression()
+    model = LinearRegression(fit_intercept=False)
     model.fit(X.reshape(-1, 1), Y)
     Y_pred = model.predict(X.reshape(-1, 1))
     # print(Y_pred)

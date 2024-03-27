@@ -21,7 +21,7 @@ def outstanding_2_significance(data: Series) -> float:
     i = np.arange(1, len(Y) + 1)
     X = i ** (-0.7)
 
-    model = LinearRegression()
+    model = LinearRegression(fit_intercept=False)
     model.fit(X.reshape(-1, 1), Y)
     Y_pred = model.predict(X.reshape(-1, 1))
     # print(Y_pred)
@@ -46,7 +46,7 @@ def outstanding_2_significance(data: Series) -> float:
 
     # print("p_value: ", p_value)
 
-    oustanding_2_plot(Y, a=model.coef_[0], b = -0.7)
+    # oustanding_2_plot(Y, a=model.coef_[0], b = -0.7)
 
     return p_value
 
@@ -111,11 +111,11 @@ def oustanding_2_plot(values: list, a: float, b: float) -> None:
 
 if __name__ == '__main__':
 
-    # print(outstanding_2_check(Series([1, 2, 3, 4, 5, 6]), threshold=2/6))
-    # p_value:  0.43866320484826793   False
-    # print(outstanding_2_check(Series([1, 2, 3, 4, 10, 20]), threshold=2/6))
-    # # p_value:  0.32057748133343134   True
-    print(outstanding_2_check(Series([1, 2, 3, 4, 15, 20]), threshold=2/6))
-    # p_value:  0.23752084891573466   True
-    # print(outstanding_2_check(Series([1, 2, 3, 4, 5, 20]), threshold=2/6))
-    # # p_value:  0.7067535526959948    False
+    # print(outstanding_2_check(Series([1, 2, 3, 4, 5, 6]), threshold=0.1))
+    # p_value:  0.5023839946579908    False
+    # print(outstanding_2_check(Series([1, 2, 3, 4, 10, 20]), threshold=0.1))
+    # # p_value:  0.0981688097939577    True
+    print(outstanding_2_check(Series([1, 2, 3, 4, 15, 20]), threshold=0.1))
+    # # p_value:  0.08078214808217588   True
+    # print(outstanding_2_check(Series([1, 2, 3, 4, 5, 20]), threshold=0.1))
+    # # p_value:  0.22370415276637567   Fase
