@@ -4,7 +4,7 @@ from sklearn.linear_model import LinearRegression
 from scipy import stats
 from typing import Tuple
 
-def outstanding_2_significance(data: Series) -> float:
+def outstanding_2_significance(data: Series, beita:float=0.7) -> float:
     """
     Calculate the probability of the given data to be an outstanding 2-significance distribution.
 
@@ -19,7 +19,7 @@ def outstanding_2_significance(data: Series) -> float:
     Y = np.sort(numpy_array)[::-1]
 
     i = np.arange(1, len(Y) + 1)
-    X = i ** (-0.7)
+    X = i ** (-beita)
 
     model = LinearRegression(fit_intercept=False)
     model.fit(X.reshape(-1, 1), Y)
@@ -50,11 +50,11 @@ def outstanding_2_significance(data: Series) -> float:
     # R_MAX = ( Y[0] - Y_pred[0] ) 
     # R_MIN = ( Y[1] - Y_pred[1] ) 
     # print("R_MAX: ", R_MAX, "R_MIN: ", R_MIN)
-    outstanding_2_Gaussian_plot(mu, sigma, (Y[0]-Y_pred[0]), (Y[1]-Y_pred[1]), R)
+    # outstanding_2_Gaussian_plot(mu, sigma, (Y[0]-Y_pred[0]), (Y[1]-Y_pred[1]), R)
 
     return p_value
 
-def outstanding_2_check(data: Series, threshold:float=0.3) -> bool:
+def outstanding_2_check(data: Series, threshold:float=0.3, beita:float=0.7) -> bool:
     """
     Check if the given data is an outstanding 1-significance distribution.
 
@@ -66,8 +66,8 @@ def outstanding_2_check(data: Series, threshold:float=0.3) -> bool:
         bool: True if the data is an outstanding 1-significance distribution, False otherwise.
     """
 
-    p_value = outstanding_2_significance(data)
-    print("p_value: ", p_value, end="\t")
+    p_value = outstanding_2_significance(data, beita=beita)
+    # print("p_value: ", p_value, end="\t")
 
     if p_value < threshold:
         return True
@@ -84,8 +84,8 @@ def outstanding_2_Gaussian_plot(mu, sigma, r1, r2, R) -> None:
     # 计算对应的高斯函数值
     y = (1/(sigma*np.sqrt(2*np.pi))) * np.exp(-((x-mu)**2)/(2*sigma**2))
 
-        # 选择一个特定的x值
-    x_points = [r1, r2]  # 例如，我们选择x = 1.5
+    # 选择一个特定的x值
+    # x_points = [r1, r2] 
 
     plt.plot(x, y)
     plt.title('Gaussian Function')
