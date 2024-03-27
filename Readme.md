@@ -13,7 +13,11 @@
 
 ## 2. Single Shape Detection
 ### 2.1 change_point_detection [**ruptures**](https://centre-borelli.github.io/ruptures-docs/)
+**Standard Change Point Data**
 ![Change Point Detection](./change_point_detection.png)
+
+**Normal Data**
+![Change Point Detection Model RBF](./change_point_detection_model_rbf_1.png)
 
 ### 2.2 outlier_detection
 

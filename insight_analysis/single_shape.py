@@ -32,9 +32,9 @@ def single_shape_schema_check(data: DataFrame) -> bool:
 def change_point_detection(data: DataFrame, method: str = 'rbf', jump: int = 1, penalty: float = 1.0) -> Tuple[List[int], List[float]]:
     values = data.iloc[:, 1].values
     # change point detection
-    model = "l2"  # "l2", "rbf"
-    algo = rpt.Pelt(model=model, min_size=3, jump=3).fit(values)
-    my_bkps = algo.predict(pen=3)
+    model = "l2"  # "l1", "l2", "rbf"
+    algo = rpt.Pelt(model=model, min_size=7, jump=1).fit(values)
+    my_bkps = algo.predict(pen=5)
     # show results
     print(my_bkps)
     result = my_bkps[:-1]
@@ -42,6 +42,22 @@ def change_point_detection(data: DataFrame, method: str = 'rbf', jump: int = 1, 
     plt.plot(values)
     for bkp in result:
         plt.axvline(x=bkp, color='r', linestyle='--')
+    plt.show()
+
+def change_point_detection_rbf(data: DataFrame, method: str = 'rbf', jump: int = 1, penalty: float = 1.0) -> Tuple[List[int], List[float]]:
+    values = data.iloc[:, 1].values
+    # change point detection
+    model = "rbf"  # "l2", "rbf"
+    algo = rpt.Pelt(model=model, min_size=1, jump=1).fit(values)
+    my_bkps = algo.predict(pen=1)
+    # show results
+    print(my_bkps)
+    result = my_bkps[:-1]
+    # 显示结果
+    plt.plot(values)
+    for bkp in result:
+        plt.axvline(x=bkp, color='r', linestyle='--')
+    plt.savefig('change_point_detection_model_rbf_1.png', dpi=800)
     plt.show()
 
 def change_point_detection_test(data: DataFrame, detection_window_length: int = 3, threshold: float = 0.05) -> List:
@@ -86,7 +102,19 @@ def change_point_detection_test(data: DataFrame, detection_window_length: int = 
     
 
 def outlier_detection(data: DataFrame) -> Tuple[Dict, str]:
-    pass
+    values = data.iloc[:, 1].values
+    # change point detection
+    model = "l2"  # "l2", "rbf"
+    algo = rpt.Pelt(model=model, min_size=1, jump=3).fit(values)
+    my_bkps = algo.predict(pen=3) #惩罚值越大，要求变化越大
+    # show results
+    print(my_bkps)
+    result = my_bkps[:-1]
+    # 显示结果
+    plt.plot(values)
+    for bkp in result:
+        plt.axvline(x=bkp, color='r', linestyle='--')
+    plt.show()
 
 def seasonality_detection(data: DataFrame) -> Tuple[Dict, str]:
     pass
@@ -103,7 +131,8 @@ if __name__ == '__main__':
     data = DataFrame({'date': api_return['content']['xvalues'], 'value': api_return['content']['yvalues'][0]})
     print(data)
 
-    # print(change_point_detection_2(data))
+    # print(outlier_detection(data))
+    print(change_point_detection_rbf(data))
 
 
 
