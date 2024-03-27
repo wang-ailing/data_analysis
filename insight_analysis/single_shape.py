@@ -31,10 +31,6 @@ def single_shape_schema_check(data: DataFrame) -> bool:
 
 def change_point_detection(data: DataFrame, method: str = 'rbf', jump: int = 1, penalty: float = 1.0) -> Tuple[List[int], List[float]]:
     values = data.iloc[:, 1].values
-    # algo = rpt.Dynp(model="l2", min_size=3, jump=3).fit(values)
-    # result = algo.predict(n_bkps=2)
-    # print(result)
-
     # change point detection
     model = "l2"  # "l2", "rbf"
     algo = rpt.Pelt(model=model, min_size=3, jump=3).fit(values)
@@ -47,38 +43,6 @@ def change_point_detection(data: DataFrame, method: str = 'rbf', jump: int = 1, 
     for bkp in result:
         plt.axvline(x=bkp, color='r', linestyle='--')
     plt.show()
-    # algo_2 = rpt.Dynp(model="l2", min_size=3, jump=3).fit(values)
-    # partition = algo_2.seg(0, len(values),n_bkps=4)
-    # print(partition)
-    # result = result[:-1]
-    # # 显示结果
-    # plt.plot(values)
-    # for bkp in result:
-    #     plt.axvline(x=bkp, color='r', linestyle='--')
-    # plt.show()
-
-    
-
-def change_point_detection_2(data: DataFrame, method: str = 'rbf', jump: int = 1, penalty: float = 1.0) -> Tuple[List[int], List[float]]:
-    values = data.iloc[:, 1].values
-    # algo = rpt.Dynp(model="l2", min_size=3, jump=3).fit(values)
-    # result = algo.predict(n_bkps=2)
-    # print(result)
-
-    # change point detection
-    model = "l2"  # "l1", "l2", "rbf"
-    algo = rpt.Pelt(model=model, min_size=3, jump=7).fit(values)
-    my_bkps = algo.predict(pen=3)
-    # show results
-    print(my_bkps)
-    result = my_bkps[:-1]
-    # 显示结果
-    plt.plot(values)
-    for bkp in result:
-        plt.axvline(x=bkp, color='r', linestyle='--')
-    plt.show()
-
-
 
 def change_point_detection_test(data: DataFrame, detection_window_length: int = 3, threshold: float = 0.05) -> List:
 
