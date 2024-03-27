@@ -50,7 +50,7 @@ def outstanding_2_significance(data: Series) -> float:
     # R_MAX = ( Y[0] - Y_pred[0] ) 
     # R_MIN = ( Y[1] - Y_pred[1] ) 
     # print("R_MAX: ", R_MAX, "R_MIN: ", R_MIN)
-    # outstanding_2_Gaussian_plot(mu, sigma, (Y[0]-Y_pred[0]), (Y[1]-Y_pred[1]), R)
+    outstanding_2_Gaussian_plot(mu, sigma, (Y[0]-Y_pred[0]), (Y[1]-Y_pred[1]), R)
 
     return p_value
 
@@ -133,8 +133,8 @@ def outstanding_2_Gaussian_plot(mu, sigma, r1, r2, R) -> None:
     plt.legend()
 
     plt.axvline(x=mu, color='r', linestyle='--')
-    plt.show()
     plt.savefig("outstanding_2_Gaussian_plot.png",    dpi=800,    bbox_inches='tight')
+    plt.show()
 
 def oustanding_2_plot(values: list, a: float, b: float) -> None:
     import matplotlib.pyplot as plt
