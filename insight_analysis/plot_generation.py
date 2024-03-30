@@ -1,8 +1,10 @@
 import numpy as np
 from scipy import interpolate
 from scipy.interpolate import Akima1DInterpolator
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
 
-def plot_generation(x, y):
+def plot_generation_Akima(x, y):
     f = Akima1DInterpolator(x, y)
     x_new = np.linspace(x.min(), x.max(), 100)
     y_new = f(x_new)
@@ -21,15 +23,16 @@ def plot_generation(x, y):
     # y_new = f(x_new)
 
     # 绘制原始数据点和插值曲线
-    import matplotlib.pyplot as plt
     plt.plot(x, y, 'o', label='Original data')
     plt.plot(x_new, y_new, label='Curve Interpolation')
     plt.legend()
     # plt.title('Cubic Interpolation with scipy.interpolate.interp1d')
-    plt.savefig('../pic/曲线插值.png', dpi=800)
+    if __name__ == '__main__':
+        plt.savefig('../pic/曲线插值.png', dpi=800)
+        
     plt.show()
 
 if __name__ == '__main__':
     x = np.array([1, 2, 3, 4, 5])
     y = np.array([2, 4, 10, 8, 10])
-    plot_generation(x, y)
+    plot_generation_Akima(x, y)
