@@ -36,3 +36,6 @@
 
 # return {"index": -1, "ratio": 0}, \
 #         f"根据不同{data.iloc[:, 0].name}的{data.iloc[:, 1].name}数据，单个突出于其他数据的{data.iloc[:, 0].name}并不存在。"
+
+
+    # 根据不同{data.iloc[:, 0].name}的{data.iloc[:, 1].name}数据，
