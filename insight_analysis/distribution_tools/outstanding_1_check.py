@@ -61,7 +61,8 @@ def outstanding_1_check(data: Series, threshold=0.3, beita=0.7) -> bool:
     """
 
     p_value = outstanding_1_significance(data, beita=beita)
-    # print("p_value: ", p_value, end="\t")
+    if __name__ == '__main__':
+        print("p_value: ", p_value, end="\t")
 
     if p_value < threshold:
         return True
