@@ -19,8 +19,8 @@
 **Standard Change Point Data**
 ![Change Point Detection](./pic/change_point_detection.png)
 
-### 2.2 outlier_detection
-[**alibi-detect-SpectralResidual**](https://docs.seldon.io/projects/alibi-detect/en/latest/api/alibi_detect.od.html#alibi_detect.od.SpectralResidual)
+### 2.2 outlier_detection [**alibi-detect-SpectralResidual**](https://docs.seldon.io/projects/alibi-detect/en/latest/api/alibi_detect.od.html#alibi_detect.od.SpectralResidual)
+
 **Normal Data**
 ![Outlier Detection of Normal Data](pic/outlier_detection_1.png)
 **Standard Outlier Data**
