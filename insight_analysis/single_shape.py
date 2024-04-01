@@ -32,36 +32,23 @@ def single_shape_schema_check(data: DataFrame) -> bool:
     return True
 
 
-def change_point_detection(data: DataFrame, method: str = 'rbf', jump: int = 1, penalty: float = 1.0) -> Tuple[List[int], List[float]]:
+def change_point_detection(data: DataFrame, model: str = 'rbf', jump: int = 1, penalty: float = 1.0) -> List[int]:
     values = data.iloc[:, 1].values
     # change point detection
     model = "l2"  # "l1", "l2", "rbf"
     algo = rpt.Pelt(model=model, min_size=7, jump=1).fit(values)
     my_bkps = algo.predict(pen=5)
     # show results
-    print(my_bkps)
-    result = my_bkps[:-1]
+    if __name__ == '__main__':
+        print(my_bkps)
+    # result = my_bkps[:-1]
+    result = my_bkps
     # 显示结果
-    plt.plot(values)
-    for bkp in result:
-        plt.axvline(x=bkp, color='r', linestyle='--')
-    plt.show()
-
-def change_point_detection_rbf(data: DataFrame, method: str = 'rbf', jump: int = 1, penalty: float = 1.0) -> Tuple[List[int], List[float]]:
-    values = data.iloc[:, 1].values
-    # change point detection
-    model = "rbf"  # "l2", "rbf"
-    algo = rpt.Pelt(model=model, min_size=1, jump=1).fit(values)
-    my_bkps = algo.predict(pen=1)
-    # show results
-    print(my_bkps)
-    result = my_bkps[:-1]
-    # 显示结果
-    plt.plot(values)
-    for bkp in result:
-        plt.axvline(x=bkp, color='r', linestyle='--')
-    # plt.savefig('change_point_detection_model_rbf_1.png', dpi=800, bbox_inches='tight')
-    plt.show()
+    # plt.plot(values)
+    # for bkp in result:
+    #     plt.axvline(x=bkp, color='r', linestyle='--')
+    # plt.show()
+    return result
 
 def outlier_detection(data: DataFrame) -> Tuple[Dict, str]:
 
@@ -110,19 +97,13 @@ def seasonality_detection(data: DataFrame, period: int = 7, threshold: float = 0
 
     # certain period seasonality detection
     decomposition = seasonal_decompose(values, model='additive', period=period)
-    # trend = decomposition.trend
     season = decomposition.seasonal
-    # residual = decomposition.resid
 
     Y = values[period//2-1:-period//2]
     season = season[period//2-1:-period//2]
     X = sm.add_constant(season)
-    # X = season
-    # Y = values
     Y = np.nan_to_num(Y, nan=0)
     X = np.nan_to_num(X, nan=0)
-    # print(X)
-    # build linear regression model
     model = sm.OLS(Y, X).fit()
 
     # print model summary: a report 
@@ -201,43 +182,28 @@ def trend_detection(data: DataFrame, min_interval: int = 7) -> Tuple[Dict, str]:
         print(turning_points[i])
         print(f"第{i+1}段的平均斜率为{mean}")
 
-    # upward_pairs = []
-    # downward_pairs = []
-    # # find pairs
-    # for i in range(1, len(values)):
-    #     for j in range(i+min_interval, len(values)):
-    #         sub_sequence = values[i:j]
-    #         if values[i] < values[j]:
-    #             if min(sub_sequence) == values[i]:
-    #                 upward_pairs.append((i,j))
-    #         elif values[i] > values[j]:
-    #             if max(sub_sequence) == values[i]:
-    #                 downward_pairs.append((i,j))
+    # calculate p-value of each segment
+    p_values = []
+    for i in range(len(turning_points) - 1):
+        x = np.array(slope[turning_points[i] : turning_points[i + 1]])
+        y = np.array(values[turning_points[i] : turning_points[i + 1]])
+        slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
+        p_values.append(p_value)
+        print(f"第{i+1}段的p-value为{p_value}")
 
+    # find the segment with the highest p-value
+    max_p_value = 0
+    max_p_index = -1
+    for i in range(len(p_values)):
+        if p_values[i] > max_p_value:
+            max_p_value = p_values[i]
+            max_p_index = i
 
-    # for each pair
-
-    # linear increase
-
-
-
-    # linear decrease
-    # increasing trend
-
-    # for pair in upward_pairs:
-    #     sub_sequence = values[pair[0]:pair[1]]
-    #     print(sub_sequence)
-    # print("--------------------------------")
-    # for pair in downward_pairs:
-    #     sub_sequence = values[pair[0]:pair[1]]
-    #     print(sub_sequence)
-
-    # decomposition = seasonal_decompose(values,  model='additive', period=3)
-    # plot_1 = decomposition.plot()
-    # plot_1.savefig('seasonality_detection.png', dpi=800, bbox_inches='tight')
-    # print(decomposition.trend)
-    # print(len(decomposition.trend))
-
+    # print the result
+    if max_p_index == -1:
+        return {}, None
+    else:
+        return {'turning_point': turning_points[max_p_index],'mean_slope': mean_slope[max_p_index], 'p_value': p_value[max_p_index]}, f"趋势变化点为第{turning_points[max_p_index]}天，平均斜率为{mean_slope[max_p_index]}，p-value为{p_value[max_p_index]}"
 
 
 if __name__ == '__main__':
