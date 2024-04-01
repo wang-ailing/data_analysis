@@ -50,18 +50,30 @@ def change_point_detection(data: DataFrame, model: str = 'rbf', jump: int = 1, p
     # plt.show()
     return result
 
-def outlier_detection(data: DataFrame) -> Tuple[Dict, str]:
+def outlier_detection(data: DataFrame, image_path: str = None) -> List[bool]:
+    """
+    Detect outliers using Spectral Residual algorithm.
+    Please refer to https://docs.seldon.io/projects/alibi-detect/en/latest/api/alibi_detect.od.html#alibi_detect.od.SpectralResidual for   for more details.
+    PaperTitle: Time-Series Anomaly Detection Service at Microsoft 
+    URL: https://arxiv.org/abs/1906.03821
+
+    Args:
+        data (DataFrame): DataFrame with columns 'date' and 'value'
+
+    Returns:
+        List[bool]: List of boolean values indicating whether each data point is an outlier or not.
+    """
 
     values = data.iloc[:, 1].values
 
     outlier_detector = SpectralResidual(
         # threshold=None,                  # threshold for outlier score
         threshold=0.99,                  # threshold for outlier score
-        window_amp=len (values),                   # window for the average log amplitude
+        window_amp=len (values)//2,                   # window for the average log amplitude
         # window_amp=min (7, len (values)),                   # window for the average log amplitude
         # window_local=min (7, len (values)//2),                 # window for the average saliency map
-        window_local=min (3, len (values)//2),                 # window for the average saliency map
-        n_est_points=min (3, len (values)//2),                 # nb of estimated points padded to the end of the sequence
+        window_local=len (values)//3,                 # window for the average saliency map
+        n_est_points=len (values)//3,                 # nb of estimated points padded to the end of the sequence
         padding_amp_method='reflect',    # padding method to be used prior to each convolution over log amplitude.
         padding_local_method='reflect',  # padding method to be used prior to each convolution over saliency map.
         padding_amp_side='bilateral'     # whether to pad the amplitudes on both sides or only on one side.
@@ -69,7 +81,8 @@ def outlier_detection(data: DataFrame) -> Tuple[Dict, str]:
     )
 
     # outlier_detector.infer_threshold(data['value'].values, threshold_perc=95)
-    # print('New threshold: {:.4f}'.format(outlier_detector.threshold))
+    # if __name__ == '__main__':
+    #     print('New threshold: {:.4f}'.format(outlier_detector.threshold))
 
     preds = outlier_detector.predict(values)
 
@@ -82,10 +95,19 @@ def outlier_detection(data: DataFrame) -> Tuple[Dict, str]:
     
         plt.show()
 
+    if image_path is not None:
+        plt.plot(data['value'])
+        for i in range(len(preds['data']['is_outlier'])):
+            if preds['data']['is_outlier'][i]:
+                plt.scatter(x=i, y=data['value'][i], color='red', marker='o')
+        
+        plt.savefig(image_path, bbox_inches='tight', dpi=800)
+        # plt.show()
+
     if len(preds['data']['is_outlier']) > 0:
-        return {'is_outlier': preds['data']['is_outlier']}, 'outlier_detection'
+        return preds['data']['is_outlier']
     else:
-        return {}, None
+        return None
 
 
 def seasonality_detection(data: DataFrame, period: int = 7, threshold: float = 0.05) -> Tuple[Dict, str]:
@@ -179,32 +201,6 @@ def trend_detection(data: DataFrame, min_interval: int = 7) -> Tuple[Dict, str]:
     for i in range(len(turning_points) - 1):
         mean = np.mean(slope[turning_points[i] : turning_points[i + 1]])
         mean_slope.append(np.mean(slope[turning_points[i] : turning_points[i + 1]]))
-        print(turning_points[i])
-        print(f"第{i+1}段的平均斜率为{mean}")
-
-    # calculate p-value of each segment
-    p_values = []
-    for i in range(len(turning_points) - 1):
-        x = np.array(slope[turning_points[i] : turning_points[i + 1]])
-        y = np.array(values[turning_points[i] : turning_points[i + 1]])
-        slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
-        p_values.append(p_value)
-        print(f"第{i+1}段的p-value为{p_value}")
-
-    # find the segment with the highest p-value
-    max_p_value = 0
-    max_p_index = -1
-    for i in range(len(p_values)):
-        if p_values[i] > max_p_value:
-            max_p_value = p_values[i]
-            max_p_index = i
-
-    # print the result
-    if max_p_index == -1:
-        return {}, None
-    else:
-        return {'turning_point': turning_points[max_p_index],'mean_slope': mean_slope[max_p_index], 'p_value': p_value[max_p_index]}, f"趋势变化点为第{turning_points[max_p_index]}天，平均斜率为{mean_slope[max_p_index]}，p-value为{p_value[max_p_index]}"
-
 
 if __name__ == '__main__':
     api_return="""{\"content\":{\"names\":[\"\\u5fae\\u535a\"],\"plot_type\":\"line\",\"title\":\"\\u58f0\\u91cf\\u8d8b\\u52bf\",\"x_title\":\"\\u6c7d\\u8f66\",\"xvalues\":[\"2024-01-01\",\"2024-01-02\",\"2024-01-03\",\"2024-01-04\",\"2024-01-05\",\"2024-01-06\",\"2024-01-07\",\"2024-01-08\",\"2024-01-09\",\"2024-01-10\",\"2024-01-11\",\"2024-01-12\",\"2024-01-13\",\"2024-01-14\",\"2024-01-15\",\"2024-01-16\",\"2024-01-17\",\"2024-01-18\",\"2024-01-19\",\"2024-01-20\",\"2024-01-21\",\"2024-01-22\",\"2024-01-23\",\"2024-01-24\",\"2024-01-25\",\"2024-01-26\",\"2024-01-27\",\"2024-01-28\",\"2024-01-29\",\"2024-01-30\",\"2024-01-31\",\"2024-02-01\",\"2024-02-02\",\"2024-02-03\",\"2024-02-04\",\"2024-02-05\",\"2024-02-06\",\"2024-02-07\",\"2024-02-08\",\"2024-02-09\",\"2024-02-10\",\"2024-02-11\",\"2024-02-12\",\"2024-02-13\",\"2024-02-14\",\"2024-02-15\",\"2024-02-16\",\"2024-02-17\",\"2024-02-18\",\"2024-02-19\",\"2024-02-20\",\"2024-02-21\",\"2024-02-22\",\"2024-02-23\",\"2024-02-24\",\"2024-02-25\",\"2024-02-26\",\"2024-02-27\"],\"y_title\":\"\\u5e74\\u4efd\",\"yvalues\":[[4683,6346,5198,3815,5484,3100,5649,777,2025,740,2781,3511,464,535,2265,3917,441,513,1479,1931,425,1144,2401,1424,2697,1663,4292,1919,2860,7074,3034,4745,2298,3840,885,1119,755,642,663,780,255,376,484,552,392,2266,6393,341,1163,7990,3199,1262,833,891,1059,810,1352,0]]},\"isTab\":true,\"type\":\"chart\"}"""
@@ -214,12 +210,13 @@ if __name__ == '__main__':
     data = DataFrame({'date': api_return['content']['xvalues'], 'value': api_return['content']['yvalues'][0]})
     print(data)
     # values = pd.Series([1,2,1,2,5,6,4]* 5)
-    # values = pd.Series([1,2,1,2,50,3,4, 2]* 5)
-    # values[15]+=100
-    # data = DataFrame({'date':['2021-01-01']*len(values), 'value':values})
+    values = pd.Series([1,2,1,2,3,4, 2]* 5 + [50] + [1,2,1,2,3,4, 2]* 5)
+    values[15]-=100
+    data = DataFrame({'date':['2021-01-01']*len(values), 'value':values})
+    # print(outlier_detection(data, image_path='pic/outlier_detection_1.png'))
 
-    # print(outlier_detection(data))
-    print(trend_detection(data))
+    print(outlier_detection(data, image_path='pic/outlier_detection_2.png'))
+    # print(trend_detection(data))
     # print(seasonality_detection(data,threshold=0.05,period=7))
 
 
