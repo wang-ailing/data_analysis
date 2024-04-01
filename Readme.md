@@ -30,5 +30,9 @@
 ### 2.3 seasonality_detection
 
 ### 2.4 trend_detection
+总体趋势分析输出：
+- ({}, '纵观数据，无整体上升或下降趋势。')
+- {'trend': 'increasing'}, f"纵观数据，数据整体呈上涨趋势。"
+- {'trend': 'decreasing'}, f"纵观数据，数据整体呈下跌趋势。"
 
 ## 3. Compound Detection
