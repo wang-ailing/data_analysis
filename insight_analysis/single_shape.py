@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
 import ruptures as rpt
+from statsmodels.tsa.seasonal import seasonal_decompose
+import statsmodels.api as sm
+from alibi_detect.od import SpectralResidual
 
 def single_shape_schema_check(data: DataFrame) -> bool:
     """
@@ -57,71 +60,183 @@ def change_point_detection_rbf(data: DataFrame, method: str = 'rbf', jump: int =
     plt.plot(values)
     for bkp in result:
         plt.axvline(x=bkp, color='r', linestyle='--')
-    plt.savefig('change_point_detection_model_rbf_1.png', dpi=800, bbox_inches='tight')
+    # plt.savefig('change_point_detection_model_rbf_1.png', dpi=800, bbox_inches='tight')
     plt.show()
-
-def change_point_detection_test(data: DataFrame, detection_window_length: int = 3, threshold: float = 0.05) -> List:
-
-    length = len(data.iloc[:, 1])
-    data_list = data.iloc[:, 1].values
-
-    for i in range(length):
-        left_window = data_list[max(i-detection_window_length,0):i]
-        right_window = data_list[i+1:min(i+detection_window_length+1,length)]
-        if len(left_window) == 0 or len(right_window) == 0 or len(right_window) < detection_window_length or len(left_window) < detection_window_length:
-            continue
-        print(left_window, right_window)
-        whole_window = np.concatenate((left_window, right_window))
-        # print(whole_window)
-        # whole_window = data_list[i-detection_window_length:i+detection_window_length+1]
-        print(whole_window)
-
-        Y_left = np.mean(left_window)
-        Y_right = np.mean(right_window)
-        n = detection_window_length
-        y = whole_window
-        # sigma_Y = np.sqrt(abs((np.sum(y**2)/(2*n)) - (np.sum(y)/(2*n))**2))
-        sigma_Y = np.sqrt((np.sum(y**2)/(2*n)) - (np.sum(y)/(2*n))**2)
-        print((np.sum(y**2)/(2*n)), (np.sum(y)/(2*n))**2)
-        sigma_miuY = sigma_Y / np.sqrt(n)
-        k_mean = np.abs(Y_left - Y_right) / sigma_miuY
-
-        print("Y_left:", Y_left, "Y_right:", Y_right, "sigma_Y:", sigma_Y, "sigma_miuY:", sigma_miuY)
-        print("k_mean:", k_mean)
-        p_value = stats.norm.pdf(k_mean, 0, 1)
-        # p_value = 1 - stats.norm.cdf(k_mean, 0, 1)
-        print("p_value:", p_value)
-        threshold = 0.35
-        if p_value > threshold:
-            print("Change point detected at index:", data.iloc[i, 0])
-            print("i:", i, "k_mean:", k_mean, "p_value:", p_value)
-            print("left_window:", left_window, "right_window:", right_window)
-
-    pass
-
-    
 
 def outlier_detection(data: DataFrame) -> Tuple[Dict, str]:
+
     values = data.iloc[:, 1].values
-    # change point detection
-    model = "l2"  # "l2", "rbf"
-    algo = rpt.Pelt(model=model, min_size=1, jump=3).fit(values)
-    my_bkps = algo.predict(pen=3) #惩罚值越大，要求变化越大
-    # show results
-    print(my_bkps)
-    result = my_bkps[:-1]
-    # 显示结果
-    plt.plot(values)
-    for bkp in result:
-        plt.axvline(x=bkp, color='r', linestyle='--')
-    plt.show()
 
-def seasonality_detection(data: DataFrame) -> Tuple[Dict, str]:
-    pass
+    outlier_detector = SpectralResidual(
+        # threshold=None,                  # threshold for outlier score
+        threshold=0.99,                  # threshold for outlier score
+        window_amp=len (values),                   # window for the average log amplitude
+        # window_amp=min (7, len (values)),                   # window for the average log amplitude
+        # window_local=min (7, len (values)//2),                 # window for the average saliency map
+        window_local=min (3, len (values)//2),                 # window for the average saliency map
+        n_est_points=min (3, len (values)//2),                 # nb of estimated points padded to the end of the sequence
+        padding_amp_method='reflect',    # padding method to be used prior to each convolution over log amplitude.
+        padding_local_method='reflect',  # padding method to be used prior to each convolution over saliency map.
+        padding_amp_side='bilateral'     # whether to pad the amplitudes on both sides or only on one side.
+        # padding_amp_side='right'     # whether to pad the amplitudes on both sides or only on one side.
+    )
+
+    # outlier_detector.infer_threshold(data['value'].values, threshold_perc=95)
+    # print('New threshold: {:.4f}'.format(outlier_detector.threshold))
+
+    preds = outlier_detector.predict(values)
+
+    if __name__ == '__main__':
+        print(preds['data']['is_outlier'])
+        plt.plot(data['value'])
+        for i in range(len(preds['data']['is_outlier'])):
+            if preds['data']['is_outlier'][i]:
+                plt.scatter(x=i, y=data['value'][i], color='red', marker='o')
+    
+        plt.show()
+
+    if len(preds['data']['is_outlier']) > 0:
+        return {'is_outlier': preds['data']['is_outlier']}, 'outlier_detection'
+    else:
+        return {}, None
 
 
-def trend_detection(data: DataFrame) -> Tuple[Dict, str]:
-    pass
+def seasonality_detection(data: DataFrame, period: int = 7, threshold: float = 0.05) -> Tuple[Dict, str]:
+    values = data.iloc[:, 1].values
+
+    if period == -1: # loop through all possible periods
+        return seasonality_detection_all_period(data, threshold)
+
+
+    # certain period seasonality detection
+    decomposition = seasonal_decompose(values, model='additive', period=period)
+    # trend = decomposition.trend
+    season = decomposition.seasonal
+    # residual = decomposition.resid
+
+    Y = values[period//2-1:-period//2]
+    season = season[period//2-1:-period//2]
+    X = sm.add_constant(season)
+    # X = season
+    # Y = values
+    Y = np.nan_to_num(Y, nan=0)
+    X = np.nan_to_num(X, nan=0)
+    # print(X)
+    # build linear regression model
+    model = sm.OLS(Y, X).fit()
+
+    # print model summary: a report 
+    # print(model.summary())
+
+    # if p-value is less than threshold(0.05 default), then seasonality is significant
+    if model.pvalues[1] < threshold:
+        return {'period': period,}, f"周期为{period}天的规律表现显著。"
+    else:
+        return {}, None
+
+def seasonality_detection_all_period(data: DataFrame, threshold: float = 0.05) -> Tuple[Dict, str]:
+    values = data.iloc[:, 1].values
+    final_period = -1
+    compare_p = threshold
+    for i in range(3, len(values)//3+1):
+
+        decomposition = seasonal_decompose(values, model='additive', period=i)
+        # trend = decomposition.trend
+        season = decomposition.seasonal
+        # residual = decomposition.resid
+
+        if (i//2-1) < 0 or (i//2-1) > len(values):
+            continue
+        Y = values[i//2-1:-(i//2)]
+        # trend = trend[period//2-1:-period//2]
+        season = season[i//2-1:-(i//2)]
+        # residual = residual[period//2-1:-period//2]
+        # print(Y)
+        # print(season)
+        # X = sm.add_constant(season)
+        X = season
+        Y = np.nan_to_num(Y, nan=0)
+        X = np.nan_to_num(X, nan=0)
+        # print(X)
+        # build linear regression model
+        model = sm.OLS(Y, X).fit()
+
+        # print model summary: a report 
+        # print(model.summary())
+
+        # if p-value is less than threshold(0.05 default), then seasonality is significant
+        if model.pvalues[0] < threshold:
+            if __name__ == '__main__':
+
+                print(f"周期为{i}天的季节性影响显著。",model.pvalues[0])
+            if compare_p > model.pvalues[0]:
+                final_period = i
+                compare_p = model.pvalues[0]
+
+        else:
+            continue
+    if final_period!= -1:
+        return {'period': i}, f"周期为{i}天的季节性表现最显著。"
+    else:
+        return {}, None
+
+def trend_detection(data: DataFrame, min_interval: int = 7) -> Tuple[Dict, str]:
+    values = data.iloc[:, 1].values
+
+    decomposition = seasonal_decompose(values, period=min_interval, model='additive')
+    trend = decomposition.trend
+    slope = np.diff(trend)
+
+    # find each turning point
+    turning_points = []
+    for i in range(1, len(slope)):
+        if slope[i] * slope[i - 1] < 0:
+            turning_points.append(i)
+
+    # calculate mean slope of each segment
+    mean_slope = []
+    for i in range(len(turning_points) - 1):
+        mean = np.mean(slope[turning_points[i] : turning_points[i + 1]])
+        mean_slope.append(np.mean(slope[turning_points[i] : turning_points[i + 1]]))
+        print(turning_points[i])
+        print(f"第{i+1}段的平均斜率为{mean}")
+
+    # upward_pairs = []
+    # downward_pairs = []
+    # # find pairs
+    # for i in range(1, len(values)):
+    #     for j in range(i+min_interval, len(values)):
+    #         sub_sequence = values[i:j]
+    #         if values[i] < values[j]:
+    #             if min(sub_sequence) == values[i]:
+    #                 upward_pairs.append((i,j))
+    #         elif values[i] > values[j]:
+    #             if max(sub_sequence) == values[i]:
+    #                 downward_pairs.append((i,j))
+
+
+    # for each pair
+
+    # linear increase
+
+
+
+    # linear decrease
+    # increasing trend
+
+    # for pair in upward_pairs:
+    #     sub_sequence = values[pair[0]:pair[1]]
+    #     print(sub_sequence)
+    # print("--------------------------------")
+    # for pair in downward_pairs:
+    #     sub_sequence = values[pair[0]:pair[1]]
+    #     print(sub_sequence)
+
+    # decomposition = seasonal_decompose(values,  model='additive', period=3)
+    # plot_1 = decomposition.plot()
+    # plot_1.savefig('seasonality_detection.png', dpi=800, bbox_inches='tight')
+    # print(decomposition.trend)
+    # print(len(decomposition.trend))
 
 
 
@@ -132,22 +247,13 @@ if __name__ == '__main__':
     api_return['content']['yvalues'][0].pop()
     data = DataFrame({'date': api_return['content']['xvalues'], 'value': api_return['content']['yvalues'][0]})
     print(data)
+    # values = pd.Series([1,2,1,2,5,6,4]* 5)
+    # values = pd.Series([1,2,1,2,50,3,4, 2]* 5)
+    # values[15]+=100
+    # data = DataFrame({'date':['2021-01-01']*len(values), 'value':values})
 
     # print(outlier_detection(data))
-    print(change_point_detection_rbf(data))
+    print(trend_detection(data))
+    # print(seasonality_detection(data,threshold=0.05,period=7))
 
 
-
-    # 绘图
-    # plt.plot(data['date'], data['value'])
-    # plt.show()
-
-    # data = DataFrame({'date': ['2021-01-01', '2021-01-02', '2021-01-03', '2021-01-04', '2021-01-05', '2021-01-06', '2021-01-07', '2021-01-08', '2021-01-09', '2021-01-10', '2021-01-11', '2021-01-12', '2021-01-13', '2021-01-14', '2021-01-15', '2021-01-16'], 'value': [1, 1, 1, 1, 1, 1, 1, 8, 1, 1, 1, 1, 1, 1, 1, 1]})
-
-    # print(change_point_detection(data))
-    # print(change_point_detection(data, threshold=0.01, detection_window_length=3))
-    # plt.figure(figsize=(12, 6))
-    # plt.plot(data['date'], data['value'])
-    # plt.rcParams.update({'font.size': 1})
-    # plt.gcf().autofmt_xdate()
-    # plt.show()
